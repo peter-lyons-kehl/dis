@@ -146,7 +146,44 @@ pub enum Displays02Plus<T01: Display, T02: Display, OTHER: DisplayOther = Empty>
     T02(T02),
     Other(OTHER),
 }
+/// Like [core::convert::From], but not reflective, so that we don't get conflicts.
+///
+/// Just like with [core::convert::From], prefer to implement [ImplFrom] over [IntoImpl], as there
+/// is a blanket `impl` of [IntoImpl] for any type that implements [ImplFrom].
+pub trait ImplFrom<F> {
+    //@TODO seal?
+    fn impl_from(f: F) -> Self;
+}
+/// Like [core::convert::Into], but not reflective, so that we don't get conflicts.
+///
+/// Just like with [core::convert::From], prefer to implement [ImplFrom] over [IntoImpl], as there
+/// is a blanket `impl` of [IntoImpl] for any type that implements [ImplFrom].
+pub trait IntoImpl<I> {
+    //@TODO seal?
+    fn into_impl(self) -> I;
+}
+impl<F, I: ImplFrom<F>> IntoImpl<I> for F {
+    fn into_impl(self) -> I {
+        I::impl_from(self)
+    }
+}
+/*impl<T01: Display, T02: Display, OTHER: DisplayOther, FROM> From<FROM>
+for Displays02Plus<T01, T02, OTHER>*/
+impl<T01: Display, T02: Display, OTHER: DisplayOther, FROM> ImplFrom<FROM>
+    for Displays02Plus<T01, T02, OTHER>
+where
+    OTHER: From<FROM>,
+{
+    /*fn into_impl(value: FROM) -> Self {
+        Self::Other(value.into())
+    }*/
+    fn impl_from(f: FROM) -> Self {
+        Self::Other(f.into())
+    }
+}
+
 pub type Displays02<T01, T02> = Displays02Plus<T01, T02, Empty>;
+
 impl<T01: Display, T02: Display, OTHER: Display> Displays02Plus<T01, T02, OTHER> {
     pub fn new_01(v: T01) -> Self {
         Self::T01(v)
