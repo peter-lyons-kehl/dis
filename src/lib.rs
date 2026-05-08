@@ -146,7 +146,8 @@ pub enum Displays02Plus<T01: Display, T02: Display, OTHER: DisplayOther = Empty>
     T02(T02),
     Other(OTHER),
 }
-/// Like [core::convert::From], but not reflective, so that we don't get conflicts.
+/// Like [core::convert::From], but NOT reflective, so that we don't get conflicts concerning
+/// [Displays02Plus] and friends.
 ///
 /// Just like with [core::convert::From], prefer to implement [ImplFrom] over [IntoImpl], as there
 /// is a blanket `impl` of [IntoImpl] for any type that implements [ImplFrom].
@@ -154,7 +155,8 @@ pub trait ImplFrom<F> {
     //@TODO seal?
     fn impl_from(f: F) -> Self;
 }
-/// Like [core::convert::Into], but not reflective, so that we don't get conflicts.
+/// Like [core::convert::Into], but NOT reflective, so that we don't get conflicts concerning
+/// [Displays02Plus] and friends.
 ///
 /// Just like with [core::convert::From], prefer to implement [ImplFrom] over [IntoImpl], as there
 /// is a blanket `impl` of [IntoImpl] for any type that implements [ImplFrom].
