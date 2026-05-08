@@ -6,6 +6,8 @@ extern crate alloc;
 #[cfg(feature = "alloc")]
 use alloc::string::String;
 
+use core::fmt::{self, Display, Formatter};
+
 #[cfg(feature = "proc-macro2-diagnostics")]
 use proc_macro2::Span;
 #[cfg(feature = "proc-macro2-diagnostics")]
@@ -61,6 +63,7 @@ impl FewOptSliStar {
 */
 //----
 
+#[cfg(feature = "alloc")]
 #[derive(Clone, Debug)]
 struct DeepDiagnosticMessage(#[cfg(feature = "alloc")] String);
 
@@ -68,7 +71,7 @@ struct DeepDiagnosticMessage(#[cfg(feature = "alloc")] String);
 pub struct DeepDiagnostic {
     #[cfg(feature = "proc-macro2-diagnostics")]
     level: proc_macro2_diagnostics::Level,
-
+    #[cfg(feature = "alloc")]
     message: DeepDiagnosticMessage,
 }
 impl DeepDiagnostic {
@@ -94,6 +97,189 @@ impl DeepDiagnostic {
     pub fn spanned(self, span: Span) -> Diagnostic {
         Diagnostic::spanned(span, self.level, Into::<String>::into(self))
     }
+
+    #[cfg(feature = "alloc")]
+    pub fn to_string_direct(&self) -> String {
+        self.message.0.clone()
+    }
+    #[cfg(feature = "alloc")]
+    pub fn to_string_move(self) -> String {
+        self.message.0
+    }
+}
+impl Display for DeepDiagnostic {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        #[cfg(feature = "alloc")]
+        self.message.0.fmt(f)?;
+        #[cfg(not(feature = "alloc"))]
+        "proc_macro2_diagnostics_more::DeepDiagnostic".fmt(f)?;
+        Ok(())
+    }
+}
+
+fn _f<R: Display, F: Fn() -> R>(_callback: F) {}
+
+//pub trait DeepMessage
+fn _caller() -> Result<(), (impl Display, impl Display)> {
+    _callee()
+}
+fn _callee() -> Result<(), (impl Display, impl Display)> {
+    Ok::<(), (&str, bool)>(())
+}
+
+pub enum Displays02<T01: Display, T02: Display> {
+    //@TODO separate enum, and wrap transparent
+    T01(T01),
+    T02(T02),
+}
+impl<T01: Display, T02: Display> Displays02<T01, T02> {
+    pub fn new_01(v: T01) -> Self {
+        Self::T01(v)
+    }
+    pub fn new_02(v: T02) -> Self {
+        Self::T02(v)
+    }
+}
+
+impl<T01: Display, T02: Display> Displays02<T01, T02> {
+    // @TODO separate function name for each trait; OR: support one trait only - user can have blanket impl.
+    //
+    // @TODO inner = by impl only; inner_mut
+    fn inner_ref(&self) -> &dyn Display {
+        match self {
+            Self::T01(inner) => inner,
+            Self::T02(inner) => inner,
+        }
+    }
+
+    fn by_ref<R, F: FnOnce(&dyn Display) -> R>(&self, apply: F) -> R {
+        apply(self.inner_ref())
+    }
+    /* Not possible: fn pointer can't use `impl TraitXyz`
+
+    fn by_impl_01<A01, R>(&self, apply: fn(&impl Display, A01), a01: A01) -> R {
+        apply(self.inner_ref())
+    }*/
+}
+impl<T01: Display, T02: Display> Display for Displays02<T01, T02> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Self::by_ref(&self, |s| s.fmt(f))
+    }
+}
+// @TODO impl From/Into T0x -> Displays02
+//--------
+
+/// Similar (but only partially) to [enum_dispatch](https://crates.io/crates/enum_dispatch) and
+/// [enum_delegate](https://crates.io/crates/enum_delegate).
+///
+/// ### dyn-compatible only
+///
+/// Only for `dyn`-compatible traits.
+///
+/// ### One trait only
+///
+/// If you'd like to implement multiple traits, define a join trait that inherits all of them, and
+/// blanket implement it:
+///
+/// ```rust
+/// pub trait DisplayAndError: Display + core::error::Error {}
+/// impl<T: Display + core::error::Error> DisplayAndError for T {}
+/// ```
+pub mod by_dyn {
+    macro_rules! variants {
+        ($enum:ident : $trait:path:ty
+            (
+                $(
+                    $constructor:ident -> $variant:ident
+                )*
+            )
+            (
+                //@TODO assert that trit is dyn-compatible - needed even if we use `impl`
+                $(
+                        (
+                            fn $method:ident(
+                                // leading `mut` is NOT needed - the variable itself will
+                                // never be modified, because we're just forwarding the call.
+                                //
+                                // Exactly ONE of the following three should match.
+                                $( &mut $mut_self:ident )? // &mut self
+                                $( &$ref_self:ident )? // &self
+                                $(  $val_self:ident )? // self
+
+                                ( $other_args:tt )*
+                            ) -> $result:ty
+                        )
+                        (
+                            ( $method_invocation:tt )*
+                        )
+                ),+
+            )
+        ) => {};
+    }
+}
+
+pub fn ret_disp() -> impl Display {
+    let _ = if true {
+        Displays02::new_01(true) //@TODO:
+                                 // -extension method for T01, T02... - blanket for all Sized
+                                 // -extension method for Result<..., ...> success
+                                 // -extension method for Result<..., ...> error
+    } else {
+        Displays02::new_02("hi")
+    };
+    if true {
+        Displays02::new_01(1.2)
+    } else {
+        let value = 1;
+        Displays02::new_02(DisplayFromFn::new(move |f| write!(f, "hi {value}")))
+    }
+}
+
+// @TODO
+pub fn ret_result() -> Result<(), impl Display> {
+    //pub fn ret_result() -> Result<(), impl Display> {
+    let result_1 = Err(if true {
+        Displays02::new_01(true) //@TODO:
+                                 // -extension method for T01, T02... - blanket for all Sized
+                                 // -extension method for Result<..., ...> success
+                                 // -extension method for Result<..., ...> error
+    } else {
+        Displays02::new_02("hi")
+    });
+    let _ = result_1?;
+
+    let result_2 = Err(if true {
+        Displays02::new_01(false)
+    } else {
+        //let value = 1;
+        Displays02::new_02("bye")
+        // DisplayFromFn::new(move |f| write!(f, "hi {value}"))
+    });
+    //let _ = result_2?;
+    //
+    //Ok(())
+    result_2
+}
+pub fn call_ret_result() -> Result<(), impl Display> {
+    ret_result()
+}
+
+#[repr(transparent)]
+pub struct DisplayFromFn<F: Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>>(F);
+impl<F: Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>> DisplayFromFn<F> {
+    pub fn new(f: F) -> Self {
+        Self(f)
+    }
+}
+impl<F: Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>> Display for DisplayFromFn<F> {
+    fn fmt(&self, fm: &mut Formatter<'_>) -> fmt::Result {
+        self.0(fm)
+    }
+}
+pub fn display_from_fn(
+    f: impl Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>,
+) -> impl Display {
+    DisplayFromFn::new(f)
 }
 
 /*
@@ -120,15 +306,15 @@ impl<'a> Iterator for MessageStarIter<'a> {
 
 #[cfg(feature = "alloc")]
 impl From<DeepDiagnostic> for String {
-    fn from(_deep: DeepDiagnostic) -> Self {
-        todo!()
+    fn from(deep: DeepDiagnostic) -> Self {
+        deep.message.0
     }
 }
 
 pub mod ext {
     #[cfg(feature = "proc-macro2-diagnostics")]
     use crate::MacroResult;
-    use crate::{sealed, DeepDiagnostic, MacroDeepResult};
+    use crate::{sealed, MacroDeepResult};
 
     #[cfg(feature = "alloc")]
     use alloc::format;
@@ -499,7 +685,9 @@ pub mod ext {
 }
 
 pub mod assert {
+    #[cfg(feature = "alloc")]
     use crate::ext::OptionOrBoolExt;
+    #[cfg(feature = "alloc")]
     use crate::MacroDeepResult;
     #[cfg(feature = "proc-macro2-diagnostics")]
     use crate::MacroResult;
