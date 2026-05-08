@@ -258,6 +258,70 @@ pub enum Display8Bits {
     U8(u8),
     I8(i8),
 }
+impl Display for Display8Bits {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Bool(inner) => inner.fmt(f),
+            Self::U8(inner) => inner.fmt(f),
+            Self::I8(inner) => inner.fmt(f),
+        }
+    }
+}
+pub enum Display16Bits {
+    Bool(bool),
+    U8(u8),
+    I8(i8),
+    U16(u16),
+    I16(i16),
+}
+impl Display for Display16Bits {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Bool(inner) => inner.fmt(f),
+            Self::U8(inner) => inner.fmt(f),
+            Self::I8(inner) => inner.fmt(f),
+            Self::U16(inner) => inner.fmt(f),
+            Self::I16(inner) => inner.fmt(f),
+        }
+    }
+}
+pub enum Display32Bits {
+    Bool(bool),
+    U8(u8),
+    I8(i8),
+    U16(u16),
+    I16(i16),
+    U32(u32),
+    I32(i32),
+    Char(char),
+    F32(f32),
+}
+impl Display for Display32Bits {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Bool(inner) => inner.fmt(f),
+            Self::U8(inner) => inner.fmt(f),
+            Self::I8(inner) => inner.fmt(f),
+            Self::U16(inner) => inner.fmt(f),
+            Self::I16(inner) => inner.fmt(f),
+            Self::U32(inner) => inner.fmt(f),
+            Self::I32(inner) => inner.fmt(f),
+            Self::Char(inner) => inner.fmt(f),
+            Self::F32(inner) => inner.fmt(f),
+        }
+    }
+}
+/*impl Display for Display64Bits {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Bool(inner) => inner.fmt(f),
+            Self::U8(inner) => inner.fmt(f),
+            Self::I8(inner) => inner.fmt(f),
+            Self::U16(inner) => inner.fmt(f),
+            Self::I16(inner) => inner.fmt(f),
+        }
+    }
+}*/
 
 //--------
 
@@ -377,6 +441,14 @@ pub fn display_from_fn(
     f: impl Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>,
 ) -> impl Display {
     DisplayFromFn::new(f)
+}
+
+pub fn display_from_pointer(p: impl core::fmt::Pointer) -> impl Display {
+    if false {
+        ""
+    } else {
+        todo!()
+    }
 }
 
 /*
