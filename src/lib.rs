@@ -127,21 +127,34 @@ fn _callee() -> Result<(), (impl Display, impl Display)> {
     Ok::<(), (&str, bool)>(())
 }
 
-pub enum Displays02<T01: Display, T02: Display> {
+pub trait Displays02Trait: Display {
+    type T01: Display;
+    type T02: Display;
+}
+pub trait DisplayOther: Display {} //@TODO make sealed
+impl<T: Display> DisplayOther for T {}
+pub struct Empty; //@TODO make sealed
+impl Display for Empty {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Ok(())
+    }
+}
+
+pub enum Displays02Plus<T01: Display, T02: Display, OTHER: DisplayOther = Empty> {
     //@TODO separate enum, and wrap transparent
     T01(T01),
     T02(T02),
+    Other(OTHER),
 }
-impl<T01: Display, T02: Display> Displays02<T01, T02> {
+pub type Displays02<T01, T02> = Displays02Plus<T01, T02, Empty>;
+impl<T01: Display, T02: Display, OTHER: Display> Displays02Plus<T01, T02, OTHER> {
     pub fn new_01(v: T01) -> Self {
         Self::T01(v)
     }
     pub fn new_02(v: T02) -> Self {
         Self::T02(v)
     }
-}
 
-impl<T01: Display, T02: Display> Displays02<T01, T02> {
     // @TODO separate function name for each trait; OR: support one trait only - user can have blanket impl.
     //
     // @TODO inner = by impl only; inner_mut
@@ -149,6 +162,7 @@ impl<T01: Display, T02: Display> Displays02<T01, T02> {
         match self {
             Self::T01(inner) => inner,
             Self::T02(inner) => inner,
+            Self::Other(inner) => inner,
         }
     }
 
@@ -161,12 +175,41 @@ impl<T01: Display, T02: Display> Displays02<T01, T02> {
         apply(self.inner_ref())
     }*/
 }
-impl<T01: Display, T02: Display> Display for Displays02<T01, T02> {
+impl<T01: Display, T02: Display> Display for Displays02Plus<T01, T02> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Self::by_ref(&self, |s| s.fmt(f))
     }
 }
-// @TODO impl From/Into T0x -> Displays02
+impl<T01: Display, T02: Display> Displays02Trait for Displays02Plus<T01, T02> {
+    type T01 = T01;
+    type T02 = T02;
+}
+/*impl<T01: Display, T02: Display> From<T01> for Displays02<T01, T02> {
+    fn from(value: T01) -> Self {
+        Self::new_01(value)
+    }
+}*/
+// CONFLICTING:
+/*impl<T01: Display, T02: Display> From<T02> for Displays02<T01, T02> {
+    fn from(value: T02) -> Self {
+        Self::new_02(value)
+    }
+}
+// foreign trait:
+impl<T01: Display, T02: Display> Into<Displays02<T01, T02>> for T01 {
+    fn into(self) -> Displays02<T01, T02> {
+        Displays02::new_01(self)
+    }
+}*/
+/*pub trait MoveIntoDisplays02 {
+    fn move_into<T01: Display, T02: Display>(self) -> Displays02<T01, T02>;
+}
+impl<T01: Display> MoveIntoDisplays02 for T01 {
+    fn move_into<T02: Display>(self) -> Displays02<T01, T02> {
+        todo!()
+    }
+}*/
+
 //--------
 
 /// Similar (but only partially) to [enum_dispatch](https://crates.io/crates/enum_dispatch) and
@@ -187,7 +230,7 @@ impl<T01: Display, T02: Display> Display for Displays02<T01, T02> {
 /// ```
 pub mod by_dyn {
     macro_rules! variants {
-        ($enum:ident : $trait:path:ty
+        ($vis:vis $enum:ident : $trait:path:ty
             (
                 $(
                     $constructor:ident -> $variant:ident
@@ -235,33 +278,38 @@ pub fn ret_disp() -> impl Display {
     }
 }
 
-// @TODO
-pub fn ret_result() -> Result<(), impl Display> {
+pub fn ret_result_displ() -> Result<(), impl Display> {
+    ret_result_displ2trait()
+}
+pub fn ret_result_displ2trait() -> Result<(), impl Displays02Trait> {
     //pub fn ret_result() -> Result<(), impl Display> {
     let result_1 = Err(if true {
-        Displays02::new_01(true) //@TODO:
-                                 // -extension method for T01, T02... - blanket for all Sized
-                                 // -extension method for Result<..., ...> success
-                                 // -extension method for Result<..., ...> error
+        // @TODO Displays02: take a generic param like Display8, Display16, Display32...
+        // - all implement a tiny trait DisplayFixed
+        //
+        // then have blanket:
+        //
+        // impl<F, DF: DisplayFixed + From<F>> From<F> for Displays02<DF> { forward-here }
+        Displays02Plus::new_01(true) //@TODO:
+                                     // -extension method for T01, T02... - blanket for all Sized
+                                     // -extension method for Result<..., ...> success
+                                     // -extension method for Result<..., ...> error
     } else {
-        Displays02::new_02("hi")
+        Displays02Plus::new_02("hi")
     });
     let _ = result_1?;
 
     let result_2 = Err(if true {
-        Displays02::new_01(false)
+        Displays02Plus::new_01(false)
     } else {
         //let value = 1;
-        Displays02::new_02("bye")
+        Displays02Plus::new_02("bye")
         // DisplayFromFn::new(move |f| write!(f, "hi {value}"))
     });
     //let _ = result_2?;
     //
     //Ok(())
     result_2
-}
-pub fn call_ret_result() -> Result<(), impl Display> {
-    ret_result()
 }
 
 #[repr(transparent)]
