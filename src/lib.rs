@@ -117,20 +117,6 @@ impl Display for DeepDiagnostic {
     }
 }
 
-fn _f<R: Display, F: Fn() -> R>(_callback: F) {}
-
-/// Default type param for [Displays02Plus]'s generic param `OTHER`. We can't use unit type `()`,
-/// because Rust may add [Display] `impl` for it later.
-///
-/// NOT exactly like Rust's "never" type. Currently will most likely NOT be optimized out in enum
-/// variants etc. But it may be replaced with Rust "never" type once that is stable.
-pub struct Never(());
-impl Display for Never {
-    fn fmt(&self, _: &mut Formatter<'_>) -> fmt::Result {
-        Ok(())
-    }
-}
-
 /// 8-bit [Display] values. Not excellent for mass storage as the enum determinant also takes 8 bits.
 pub enum Display8Bits {
     Bool(bool),
@@ -253,54 +239,6 @@ pub mod by_dyn {
         ) => {};
     }
 }
-
-#[repr(transparent)]
-pub struct DisplayFromFn<F: Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>>(F);
-impl<F: Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>> DisplayFromFn<F> {
-    pub fn new(f: F) -> Self {
-        Self(f)
-    }
-}
-impl<F: Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>> Display for DisplayFromFn<F> {
-    fn fmt(&self, fm: &mut Formatter<'_>) -> fmt::Result {
-        self.0(fm)
-    }
-}
-pub fn display_from_fn(
-    f: impl Fn(&mut Formatter<'_>) -> Result<(), core::fmt::Error>,
-) -> impl Display {
-    DisplayFromFn::new(f)
-}
-
-pub fn display_from_pointer(p: impl core::fmt::Pointer) -> impl Display {
-    if false {
-        ""
-    } else {
-        todo!()
-    }
-}
-
-/*
-use core::iter::{self, Cloned, Flatten, Once};
-
-enum MessageStarIterEnum<'a> {
-    OwnString(Once<Star>), //@TODO - LEAKS!
-    Sli(core::slice::Iter<'a, Star>),
-    SliSliSli(Flatten<Cloned<Flatten<Cloned<core::slice::Iter<'a, SliSliStar>>>>>),
-}
-#[repr(transparent)]
-pub struct MessageStarIter<'a>(MessageStarIterEnum<'a>);
-impl<'a> Iterator for MessageStarIter<'a> {
-    type Item = Star;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match &mut self.0 {
-            MessageStarIterEnum::OwnString(ref mut once) => once.next(),
-            MessageStarIterEnum::Sli(ref mut sli) => sli.next().map(|v| *v),
-            MessageStarIterEnum::SliSliSli(ref mut sli_sli_sli) => sli_sli_sli.next().map(|v| *v),
-        }
-    }
-}*/
 
 #[cfg(feature = "alloc")]
 impl From<DeepDiagnostic> for String {
