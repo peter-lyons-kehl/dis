@@ -17,7 +17,11 @@ use proc_macro2_diagnostics::Diagnostic;
 #[cfg(feature = "proc-macro2-diagnostics")]
 pub type MacroResult<T> = Result<T, Diagnostic>;
 
-pub type MacroDeepResult<T, M: Display> = Result<T, DeepDiagnostic<M>>;
+// @TODO default: String
+#[cfg(feature = "alloc")]
+pub type MacroDeepResult<T, M = String> = Result<T, DeepDiagnostic<M>>;
+#[cfg(not(feature = "alloc"))]
+pub type MacroDeepResult<T, M> = Result<T, DeepDiagnostic<M>>;
 
 /*pub type Star = &'static str;
 pub type RefStar = &'static Star;
@@ -65,6 +69,15 @@ impl FewOptSliStar {
 //----
 
 // @TODO SEAL!
+#[cfg(feature = "alloc")]
+#[derive(Clone, Debug)]
+pub struct DeepDiagnostic<M: Display = String> {
+    #[cfg(feature = "proc-macro2-diagnostics")]
+    level: proc_macro2_diagnostics::Level,
+
+    message: M,
+}
+#[cfg(not(feature = "alloc"))]
 #[derive(Clone, Debug)]
 pub struct DeepDiagnostic<M: Display> {
     #[cfg(feature = "proc-macro2-diagnostics")]
@@ -89,7 +102,7 @@ impl<M: Display> DeepDiagnostic<M> {
     // pub fn spanned<S: MultiSpan>(self, s: S) -> Diagnostic
     #[cfg(feature = "proc-macro2-diagnostics")]
     pub fn spanned(self, span: Span) -> Diagnostic {
-        Diagnostic::spanned(span, self.level, Into::<String>::into(self))
+        Diagnostic::spanned(span, self.level, self.to_string())
     }
 }
 /* // Probably not much faster (if at all) than .to_string()
@@ -108,14 +121,18 @@ impl<M: Display> Display for DeepDiagnostic<M> {
         self.message.fmt(f)
     }
 }
-
 #[cfg(feature = "alloc")]
-impl DeepDiagnostic<String> {
-    pub fn to_string_move(self) -> String {
-        self.message
+impl<M: Display + 'static> DeepDiagnostic<M> {
+    pub fn to_string_move(mut self) -> String {
+        let self_mut = &mut self as &mut dyn Any;
+        match self_mut.downcast_mut::<DeepDiagnostic<String>>() {
+            Some(as_string_based) => core::mem::take(&mut as_string_based.message),
+            None => self.to_string(),
+        }
     }
 }
 
+enum SealedTraitFunParam {}
 //--------
 /// Similar (but only partially) to [enum_dispatch](https://crates.io/crates/enum_dispatch) and
 /// [enum_delegate](https://crates.io/crates/enum_delegate).
@@ -172,11 +189,7 @@ impl From<DeepDiagnostic> for String {
         deep.message.0
     }
 }*/
-
-/// Intentionally not public - used to indicate a sealed trait.
-struct SealedTraitFunParam;
-
-pub mod ext {
+pub mod ext_all {
     #[cfg(feature = "alloc")]
     use crate::DeepDiagnostic;
     #[cfg(feature = "proc-macro2-diagnostics")]
@@ -199,6 +212,7 @@ pub mod ext {
         // @TODO if implemented in proc_macro2_diagnostics, make it accept MultiSpan.
         /// Add the given [Span], and transform to [MacroResult].
         fn spanned(self, span: Span) -> MacroResult<T>;
+        #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
     }
     #[cfg(feature = "proc-macro2-diagnostics")]
@@ -552,7 +566,7 @@ pub mod ext {
 
 pub mod assert {
     #[cfg(feature = "alloc")]
-    use crate::ext::OptionOrBoolExt;
+    use crate::ext_all::OptionOrBoolExt;
     #[cfg(feature = "alloc")]
     use crate::MacroDeepResult;
     #[cfg(feature = "proc-macro2-diagnostics")]
