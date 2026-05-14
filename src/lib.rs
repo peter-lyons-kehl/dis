@@ -97,6 +97,8 @@ impl<M: Display + 'static> DeepDiagnostic<M> {
     }
 }
 impl<M: Display> From<M> for DeepDiagnostic<M> {
+    /// Move-and-construct/convert. If using `proc-macro2-diagnostics`, then [DeepDiagnostic::level]
+    /// will be set to [Level::Error].
     fn from(message: M) -> Self {
         Self {
             #[cfg(feature = "proc-macro2-diagnostics")]
