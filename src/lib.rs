@@ -214,7 +214,6 @@ pub mod ext_all {
         fn _seal(&self, _: SealedTraitFunParam) {}
     }
 
-    #[cfg(feature = "alloc")]
     pub trait IntoMsgExt<M: Display>: Into<M> {
         fn into_error(self) -> DeepDiagnostic<M>;
         
