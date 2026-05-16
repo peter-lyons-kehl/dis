@@ -214,7 +214,7 @@ pub mod ext_all {
         fn _seal(&self, _: SealedTraitFunParam) {}
     }
 
-    pub trait IntoMsgExt<M: Display>: Into<M> {
+    pub trait MsgIntoDisplayExt<M: Display>: Into<M> {
         fn into_error(self) -> DeepDiagnostic<M>;
 
         /// Param `f` is a closure/function that returns a [String]. This method returns
@@ -249,7 +249,7 @@ pub mod ext_all {
         }
     }
     #[cfg(feature = "alloc")]
-    impl<M: Display, T: Into<M>> IntoMsgExt<M> for T {
+    impl<M: Display, T: Into<M>> MsgIntoDisplayExt<M> for T {
         fn into_error(self) -> DeepDiagnostic<M> {
             DeepDiagnostic::new_error(self.into())
         }
@@ -285,7 +285,7 @@ pub mod ext_all {
         fn _seal(&self, _: SealedTraitFunParam) {}
     }
 
-    pub trait ResultErrIntoStringExt<M: Display, T> {
+    pub trait ResultErrIntoDisplayExt<M: Display, T> {
         fn map_error_into(self) -> MacroDeepResult<T, M>;
         fn map_error_into_with<F: Fn() -> M>(self, f: F) -> MacroDeepResult<T, impl Display>;
 
@@ -297,7 +297,7 @@ pub mod ext_all {
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
     }
-    impl<M: Display, T, E: Into<M>> ResultErrIntoStringExt<M, T> for Result<T, E> {
+    impl<M: Display, T, E: Into<M>> ResultErrIntoDisplayExt<M, T> for Result<T, E> {
         fn map_error_into(self) -> MacroDeepResult<T, M> {
             self.map_err(|e| DeepDiagnostic::new_error(e))
         }
@@ -419,7 +419,7 @@ pub mod ext_all {
     }
 
     #[cfg(feature = "alloc")]
-    pub trait ResultErrToStringExt<T> {
+    pub trait ResultErrToDisplayExt<T> {
         fn map_error_to(self) -> MacroDeepResult<T>;
         fn map_error_to_with<F: Fn() -> String>(self, f: F) -> MacroDeepResult<T>;
 
@@ -432,7 +432,7 @@ pub mod ext_all {
         fn _seal(&self, _: SealedTraitFunParam);
     }
     #[cfg(feature = "alloc")]
-    impl<T, E: ToString> ResultErrToStringExt<T> for Result<T, E> {
+    impl<T, E: ToString> ResultErrToDisplayExt<T> for Result<T, E> {
         fn map_error_to(self) -> MacroDeepResult<T> {
             self.map_err(|e| DeepDiagnostic::new_error(e.to_string()))
         }
