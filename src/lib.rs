@@ -78,6 +78,13 @@ impl<M: Display> DeepDiagnostic<M> {
     pub fn into_msg(self) -> M {
         self.message
     }
+    pub fn msg(&self) -> & M {
+        &self.message
+    }
+    #[cfg(feature = "proc-macro2-diagnostics")]
+    pub fn level(&self) -> Level {
+        self.level
+    }
 
     // @TODO if implemented in proc_macro2_diagnostics, make it accept MultiSpan:
     //

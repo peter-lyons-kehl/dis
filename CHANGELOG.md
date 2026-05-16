@@ -4,4 +4,6 @@
 
 ### May 16, 2024
 
-`DeepDiagnostic` constructors: `new_error`, `new_warning`, `new_note`, `new_help`.
+- `DeepDiagnostic::msg`, `DeepDiagnostic::level`
+- `no_std` and allocation-free subset
+- `DeepDiagnostic` constructors: `new_error`, `new_warning`, `new_note`, `new_help`.
