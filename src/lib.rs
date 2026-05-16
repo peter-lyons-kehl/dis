@@ -5,7 +5,10 @@ extern crate alloc;
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::string::ToString as _;
 
+#[cfg(any(feature = "alloc", feature = "proc-macro2-diagnostics"))]
 use core::any::Any;
 use core::fmt::{self, Display, Formatter};
 
@@ -152,9 +155,11 @@ pub mod by_dyn {
 pub mod ext_all {
     #[cfg(feature = "alloc")]
     use crate::DeepDiagnostic;
+    #[cfg(any(feature = "alloc", feature = "proc-macro2-diagnostics"))]
+    use crate::MacroDeepResult;
     #[cfg(feature = "proc-macro2-diagnostics")]
     use crate::MacroResult;
-    use crate::{MacroDeepResult, SealedTraitFunParam};
+    use crate::SealedTraitFunParam;
 
     #[cfg(feature = "alloc")]
     use alloc::format;
