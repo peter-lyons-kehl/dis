@@ -175,19 +175,15 @@ pub mod by_dyn {
 }
 
 pub mod ext_all {
-    #[cfg(feature = "alloc")]
-    use crate::DeepDiagnostic;
-    #[cfg(any(feature = "alloc", feature = "proc-macro2-diagnostics"))]
-    use crate::MacroDeepResult;
     #[cfg(feature = "proc-macro2-diagnostics")]
     use crate::MacroResult;
-    use crate::SealedTraitFunParam;
+    use crate::{DeepDiagnostic, MacroDeepResult, SealedTraitFunParam};
 
     #[cfg(feature = "alloc")]
     use alloc::format;
     #[cfg(feature = "alloc")]
     use alloc::string::{String, ToString};
-    use core::fmt::Debug;
+    use core::fmt::{Debug, Display};
 
     #[cfg(feature = "proc-macro2-diagnostics")]
     use proc_macro2::Span;
@@ -307,33 +303,30 @@ pub mod ext_all {
         fn _seal(&self, _: SealedTraitFunParam) {}
     }
 
-    pub trait OptionOrBoolExt<T> {
-        #[cfg(feature = "alloc")]
-        fn ok_or_error_with<F: Fn() -> String>(self, f: F) -> MacroDeepResult<T>;
+    pub trait OptionOrBoolExt<T, M: Display> {
+        fn ok_or_error_with<F: Fn() -> M>(self, f: F) -> MacroDeepResult<T, M>;
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn ok_or_error_with_at<F: Fn() -> String>(self, f: F, span: Span) -> MacroResult<T>;
+        fn ok_or_error_with_at<F: Fn() -> M>(self, f: F, span: Span) -> MacroResult<T>;
 
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
     }
-    impl<T> OptionOrBoolExt<T> for Option<T> {
-        #[cfg(feature = "alloc")]
-        fn ok_or_error_with<F: Fn() -> String>(self, f: F) -> MacroDeepResult<T> {
+    impl<T, M: Display> OptionOrBoolExt<T, M> for Option<T> {
+        fn ok_or_error_with<F: Fn() -> M>(self, f: F) -> MacroDeepResult<T, M> {
             self.ok_or_else(|| DeepDiagnostic::new_error(f()))
         }
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn ok_or_error_with_at<F: Fn() -> String>(self, f: F, span: Span) -> MacroResult<T> {
-            self.ok_or_else(|| span.error(f()))
+        fn ok_or_error_with_at<F: Fn() -> M>(self, f: F, span: Span) -> MacroResult<T> {
+            self.ok_or_else(|| span.error(f().to_string()))
         }
 
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam) {}
     }
-    impl OptionOrBoolExt<()> for bool {
-        #[cfg(feature = "alloc")]
-        fn ok_or_error_with<F: Fn() -> String>(self, f: F) -> MacroDeepResult<()> {
+    impl<M: Display> OptionOrBoolExt<(), M> for bool {
+        fn ok_or_error_with<F: Fn() -> M>(self, f: F) -> MacroDeepResult<(), M> {
             // bool::ok_or_else is unstable: https://github.com/rust-lang/rust/issues/142748
             if self {
                 Ok(())
@@ -343,11 +336,11 @@ pub mod ext_all {
         }
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn ok_or_error_with_at<F: Fn() -> String>(self, f: F, span: Span) -> MacroResult<()> {
+        fn ok_or_error_with_at<F: Fn() -> M>(self, f: F, span: Span) -> MacroResult<()> {
             if self {
                 Ok(())
             } else {
-                Err(span.error(f()))
+                Err(span.error(f().to_string()))
             }
         }
 
