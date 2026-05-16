@@ -42,12 +42,34 @@ pub struct DeepDiagnostic<M: Display> {
     message: M,
 }
 impl<M: Display> DeepDiagnostic<M> {
-    // @TODO macro_rules and also generate: pub fn warning, note, help
-    #[cfg(feature = "alloc")]
     pub fn new_error<T: Into<M>>(message: T) -> Self {
         Self {
             #[cfg(feature = "proc-macro2-diagnostics")]
             level: Level::Error,
+
+            message: message.into(),
+        }
+    }
+    pub fn new_warning<T: Into<M>>(message: T) -> Self {
+        Self {
+            #[cfg(feature = "proc-macro2-diagnostics")]
+            level: Level::Warning,
+
+            message: message.into(),
+        }
+    }
+    pub fn new_note<T: Into<M>>(message: T) -> Self {
+        Self {
+            #[cfg(feature = "proc-macro2-diagnostics")]
+            level: Level::Note,
+
+            message: message.into(),
+        }
+    }
+    pub fn new_help<T: Into<M>>(message: T) -> Self {
+        Self {
+            #[cfg(feature = "proc-macro2-diagnostics")]
+            level: Level::Help,
 
             message: message.into(),
         }
@@ -243,7 +265,6 @@ pub mod ext_all {
 
     #[cfg(feature = "alloc")]
     pub trait ResultErrIntoStringExt<T> {
-        //@TODO was IntoStringResultExt
         fn map_error_into(self) -> MacroDeepResult<T>;
         fn map_error_into_with<F: Fn() -> String>(self, f: F) -> MacroDeepResult<T>;
 
@@ -377,7 +398,6 @@ pub mod ext_all {
 
     #[cfg(feature = "alloc")]
     pub trait ResultErrToStringExt<T> {
-        //@TODO was ToStringResultExt
         fn map_error_to(self) -> MacroDeepResult<T>;
         fn map_error_to_with<F: Fn() -> String>(self, f: F) -> MacroDeepResult<T>;
 
@@ -468,7 +488,6 @@ pub mod ext_all {
 
     #[cfg(feature = "alloc")]
     pub trait ResultErrDebugExt<T> {
-        //@TODO was DbgResultExt
         fn map_error_dbg(self) -> MacroDeepResult<T>;
         fn map_error_dbg_with<F: Fn() -> String>(self, f: F) -> MacroDeepResult<T>;
 
@@ -527,12 +546,11 @@ pub mod assert {
     #[cfg(feature = "proc-macro2-diagnostics")]
     use proc_macro2::Span;
 
-    // @TODO was true_or_error
     #[cfg(feature = "alloc")]
     pub fn true_or_error_with<F: Fn() -> String>(b: bool, f: F) -> MacroDeepResult<()> {
         b.ok_or_error_with(f)
     }
-    #[cfg(feature = "proc-macro2-diagnostics")] //@TODO was true_or_error_at
+    #[cfg(feature = "proc-macro2-diagnostics")]
     pub fn true_or_error_with_at<F: Fn() -> String>(b: bool, f: F, span: Span) -> MacroResult<()> {
         b.ok_or_error_with_at(f, span)
     }
