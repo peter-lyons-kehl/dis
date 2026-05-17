@@ -4,16 +4,16 @@
 extern crate alloc;
 
 #[cfg(feature = "alloc")]
-use alloc::string::String;
-#[cfg(feature = "alloc")]
-use alloc::string::ToString as _;
+use alloc::string::{String, ToString as _};
 
 #[cfg(any(feature = "alloc", feature = "proc-macro2-diagnostics"))]
 use core::any::Any;
+
 use core::fmt::{self, Display, Formatter};
 
 #[cfg(feature = "proc-macro2-diagnostics")]
 use proc_macro2::Span;
+
 #[cfg(feature = "proc-macro2-diagnostics")]
 use proc_macro2_diagnostics::{Diagnostic, Level};
 
@@ -22,6 +22,7 @@ pub type MacroResult<T> = Result<T, Diagnostic>;
 
 #[cfg(feature = "alloc")]
 pub type MacroDeepResult<T, M = String> = Result<T, DeepDiagnostic<M>>;
+
 #[cfg(not(feature = "alloc"))]
 pub type MacroDeepResult<T, M> = Result<T, DeepDiagnostic<M>>;
 
@@ -50,30 +51,30 @@ impl<M: Display> DeepDiagnostic<M> {
             message: message.into(),
         }
     }
-    pub fn new_warning<T: Into<M>>(message: T) -> Self {
+    /*pub fn new_warning<T: Into<M>>(message: T) -> Self {
         Self {
             #[cfg(feature = "proc-macro2-diagnostics")]
             level: Level::Warning,
 
             message: message.into(),
         }
-    }
-    pub fn new_note<T: Into<M>>(message: T) -> Self {
+    }*/
+    /*pub fn new_note<T: Into<M>>(message: T) -> Self {
         Self {
             #[cfg(feature = "proc-macro2-diagnostics")]
             level: Level::Note,
 
             message: message.into(),
         }
-    }
-    pub fn new_help<T: Into<M>>(message: T) -> Self {
+    }*/
+    /*pub fn new_help<T: Into<M>>(message: T) -> Self {
         Self {
             #[cfg(feature = "proc-macro2-diagnostics")]
             level: Level::Help,
 
             message: message.into(),
         }
-    }
+    }*/
 
     pub fn into_msg(self) -> M {
         self.message
@@ -132,6 +133,7 @@ impl<M: Display> From<M> for DeepDiagnostic<M> {
         Self {
             #[cfg(feature = "proc-macro2-diagnostics")]
             level: Level::Error,
+
             message,
         }
     }
@@ -191,19 +193,20 @@ pub mod by_dyn {
     }*/
 }
 
-pub mod ext_all {
+pub mod ext {
     #[cfg(feature = "proc-macro2-diagnostics")]
     use crate::MacroResult;
+
     use crate::{DeepDiagnostic, MacroDeepResult, SealedTraitFunParam};
 
     #[cfg(feature = "alloc")]
-    use alloc::format;
-    #[cfg(feature = "alloc")]
-    use alloc::string::ToString;
+    use alloc::{format, string::ToString};
+
     use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
     #[cfg(feature = "proc-macro2-diagnostics")]
     use proc_macro2::Span;
+
     #[cfg(feature = "proc-macro2-diagnostics")]
     use proc_macro2_diagnostics::{Diagnostic, SpanDiagnosticExt as _};
 
@@ -212,6 +215,7 @@ pub mod ext_all {
         // @TODO if implemented in proc_macro2_diagnostics, make it accept MultiSpan.
         /// Add the given [Span], and transform to [MacroResult].
         fn spanned(self, span: Span) -> MacroResult<T>;
+
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
     }
@@ -608,7 +612,7 @@ pub mod ext_all {
 }
 
 pub mod assert {
-    use crate::ext_all::OptionOrBoolExt;
+    use crate::ext::OptionOrBoolExt;
 
     use crate::MacroDeepResult;
 
