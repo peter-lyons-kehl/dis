@@ -93,6 +93,16 @@ impl<M: Display> DeepDiagnostic<M> {
     pub fn spanned(self, span: Span) -> Diagnostic {
         Diagnostic::spanned(span, self.level, self.to_string())
     }
+
+    #[cfg(feature = "alloc")]
+    pub fn to_string_based(self) -> DeepDiagnostic<String> {
+        DeepDiagnostic {
+            #[cfg(feature = "proc-macro2-diagnostics")]
+            level: self.level,
+
+            message: self.message.to_string(),
+        }
+    }
 }
 impl<M: Display> Display for DeepDiagnostic<M> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -206,7 +216,7 @@ pub mod ext_all {
         fn _seal(&self, _: SealedTraitFunParam);
     }
     #[cfg(feature = "proc-macro2-diagnostics")]
-    impl<T> MacroDeepResultExt<T> for MacroDeepResult<T> {
+    impl<T, M: Display> MacroDeepResultExt<T> for MacroDeepResult<T, M> {
         fn spanned(self, span: Span) -> MacroResult<T> {
             self.map_err(|deep_err| deep_err.spanned(span))
         }
@@ -517,7 +527,7 @@ pub mod ext_all {
         fn _seal(&self, _: SealedTraitFunParam) {}
     }
 
-    pub trait ResultErrDebugExt<M: Display, T> {
+    pub trait ResultErrDebugExt<T> {
         fn map_error_dbg(self) -> MacroDeepResult<T, impl Display>;
         fn map_error_dbg_with<FM: Display, F: Fn() -> FM>(
             self,
@@ -532,7 +542,7 @@ pub mod ext_all {
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
     }
-    impl<M: Display, T, E: Debug> ResultErrDebugExt<M, T> for Result<T, E> {
+    impl<T, E: Debug> ResultErrDebugExt<T> for Result<T, E> {
         fn map_error_dbg(self) -> MacroDeepResult<T, impl Display> {
             self.map_err(|e| {
                 let display =
