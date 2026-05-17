@@ -15,16 +15,19 @@ use core::fmt::{self, Display, Formatter};
 use proc_macro2::Span;
 
 #[cfg(feature = "proc-macro2-diagnostics")]
-use proc_macro2_diagnostics::{Diagnostic, Level};
+use proc_macro2_diagnostics::{Diagnostic as PmDiagnostic, Level};
 
 #[cfg(feature = "proc-macro2-diagnostics")]
-pub type MacroResult<T> = Result<T, Diagnostic>;
+pub type MacroResult<T> = Result<T, PmDiagnostic>;
 
 #[cfg(feature = "alloc")]
 pub type MacroDeepResult<T, M = String> = Result<T, DeepDiagnostic<M>>;
 
 #[cfg(not(feature = "alloc"))]
 pub type MacroDeepResult<T, M> = Result<T, DeepDiagnostic<M>>;
+
+/*#[cfg(feature = "proc-macro2")]
+pub type MacroSpannedResult<T, M> = Result<T, SpannedDiagnostic<M>>;*/
 
 #[cfg(feature = "alloc")]
 #[derive(Clone, Debug)]
@@ -155,8 +158,8 @@ pub struct SpannedDiagnostic<M: Display> {
 #[cfg(feature = "proc-macro2")]
 impl<M: Display> SpannedDiagnostic<M> {
     #[cfg(feature = "proc-macro2-diagnostics")]
-    pub fn into_diagnostic(self) -> Diagnostic {
-        Diagnostic::spanned(self.span, self.deep.level, self.deep.message.to_string())
+    pub fn into_diagnostic(self) -> PmDiagnostic {
+        PmDiagnostic::spanned(self.span, self.deep.level, self.deep.message.to_string())
     }
 }
 
@@ -651,7 +654,7 @@ pub mod assert {
     pub fn true_or_error_with<FM: Display, F: Fn() -> FM>(
         b: bool,
         f: F,
-    ) -> MacroDeepResult<(), impl Display> {
+    ) -> MacroDeepResult<(), FM> {
         b.ok_or_error_with(f)
     }
     #[cfg(feature = "proc-macro2-diagnostics")]
