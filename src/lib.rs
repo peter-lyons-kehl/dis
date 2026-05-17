@@ -151,6 +151,7 @@ enum SealedTraitFunParam {}
 /// [SpannedDiagnostic::into_diagnostic].
 #[cfg(feature = "proc-macro2")]
 #[derive(Clone, Debug)]
+// @TODO Consider default type String
 pub struct SpannedDiagnostic<M: Display> {
     deep: DeepDiagnostic<M>,
     span: Span,
@@ -235,7 +236,7 @@ pub mod ext {
     use proc_macro2::Span;
 
     #[cfg(feature = "proc-macro2-diagnostics")]
-    use proc_macro2_diagnostics::{Diagnostic, SpanDiagnosticExt as _};
+    use proc_macro2_diagnostics::{Diagnostic as PmDiagnostic, SpanDiagnosticExt as _};
 
     #[cfg(feature = "proc-macro2-diagnostics")]
     pub trait MacroDeepResultExt<T> {
@@ -266,17 +267,19 @@ pub mod ext {
         fn into_error_with<FM: Display, F: Fn() -> FM>(self, f: F) -> DeepDiagnostic<impl Display>;
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn into_error_at(self, span: Span) -> Diagnostic;
+        fn into_error_at(self, span: Span) -> PmDiagnostic;
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn into_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> Diagnostic;
+        fn into_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> PmDiagnostic;
 
         // Sealing is not really necessary, because we have a blanket impl that covers any and
         // all eligible types, so no other types can implement this trait.
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
     }
-    struct DisplayFromFn<F: Fn(&mut Formatter) -> FmtResult>(F);
+    struct DisplayFromFn<F>(F)
+    where
+        F: Fn(&mut Formatter) -> FmtResult;
     impl<F: Fn(&mut Formatter) -> FmtResult> Display for DisplayFromFn<F> {
         fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
             self.0(fmt)
@@ -299,13 +302,13 @@ pub mod ext {
 
         /// Convenience function: same as into_error().span(span)
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn into_error_at(self, span: Span) -> Diagnostic {
+        fn into_error_at(self, span: Span) -> PmDiagnostic {
             let m = self.into();
             span.error(m.to_string())
         }
         /// Convenience function: same as into_error_with(f).span(span)
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn into_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> Diagnostic {
+        fn into_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> PmDiagnostic {
             let mut s = f().to_string();
             s.push(' ');
             s.push_str(&self.into().to_string());
@@ -437,9 +440,9 @@ pub mod ext {
         fn to_error_with<FM: Display, F: Fn() -> FM>(&self, f: F) -> DeepDiagnostic;
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn to_error_at(&self, span: Span) -> Diagnostic;
+        fn to_error_at(&self, span: Span) -> PmDiagnostic;
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn to_error_with_at<FM: Display, F: Fn() -> FM>(&self, f: F, span: Span) -> Diagnostic;
+        fn to_error_with_at<FM: Display, F: Fn() -> FM>(&self, f: F, span: Span) -> PmDiagnostic;
 
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
@@ -455,11 +458,11 @@ pub mod ext {
         }
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn to_error_at(&self, span: Span) -> Diagnostic {
+        fn to_error_at(&self, span: Span) -> PmDiagnostic {
             span.error(self.to_string())
         }
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn to_error_with_at<FM: Display, F: Fn() -> FM>(&self, f: F, span: Span) -> Diagnostic {
+        fn to_error_with_at<FM: Display, F: Fn() -> FM>(&self, f: F, span: Span) -> PmDiagnostic {
             let s = format!("{} {}", f(), self.to_string());
             span.error(s)
         }
@@ -523,10 +526,10 @@ pub mod ext {
         fn dbg_error_with<FM: Display, F: Fn() -> FM>(self, f: F) -> DeepDiagnostic<impl Display>;
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn dbg_error_at(&self, span: Span) -> Diagnostic;
+        fn dbg_error_at(&self, span: Span) -> PmDiagnostic;
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn dbg_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> Diagnostic;
+        fn dbg_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> PmDiagnostic;
 
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
@@ -547,11 +550,11 @@ pub mod ext {
         }
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn dbg_error_at(&self, span: Span) -> Diagnostic {
+        fn dbg_error_at(&self, span: Span) -> PmDiagnostic {
             span.error(format!("{self:?}"))
         }
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn dbg_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> Diagnostic {
+        fn dbg_error_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> PmDiagnostic {
             let s = format!("{} {:?}", f(), self);
             span.error(s)
         }
