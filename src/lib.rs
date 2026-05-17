@@ -296,7 +296,11 @@ pub mod ext_all {
         fn map_error_into_at(self, span: Span) -> MacroResult<T>;
 
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn map_error_into_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> MacroResult<T>;
+        fn map_error_into_with_at<FM: Display, F: Fn() -> FM>(
+            self,
+            f: F,
+            span: Span,
+        ) -> MacroResult<T>;
 
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
@@ -325,7 +329,11 @@ pub mod ext_all {
             self.map_err(|e| span.error(e.into().to_string()))
         }
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn map_error_into_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> MacroResult<T> {
+        fn map_error_into_with_at<FM: Display, F: Fn() -> FM>(
+            self,
+            f: F,
+            span: Span,
+        ) -> MacroResult<T> {
             self.map_err(|e| {
                 let s = format!("{} {}", f(), e.into());
                 span.error(s)
@@ -437,7 +445,11 @@ pub mod ext_all {
         #[cfg(feature = "proc-macro2-diagnostics")]
         fn map_error_to_at(self, span: Span) -> MacroResult<T>;
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn map_error_to_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> MacroResult<T>;
+        fn map_error_to_with_at<FM: Display, F: Fn() -> FM>(
+            self,
+            f: F,
+            span: Span,
+        ) -> MacroResult<T>;
 
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
@@ -459,7 +471,11 @@ pub mod ext_all {
             self.map_err(|e| span.error(e.to_string()))
         }
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn map_error_to_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> MacroResult<T> {
+        fn map_error_to_with_at<FM: Display, F: Fn() -> FM>(
+            self,
+            f: F,
+            span: Span,
+        ) -> MacroResult<T> {
             self.map_err(|e| {
                 let s = format!("{} {}", f(), e.to_string());
                 span.error(s)
@@ -523,7 +539,11 @@ pub mod ext_all {
         #[cfg(feature = "proc-macro2-diagnostics")]
         fn map_error_dbg_at(self, span: Span) -> MacroResult<T>;
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn map_error_dbg_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> MacroResult<T>;
+        fn map_error_dbg_with_at<FM: Display, F: Fn() -> FM>(
+            self,
+            f: F,
+            span: Span,
+        ) -> MacroResult<T>;
 
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam);
@@ -554,7 +574,11 @@ pub mod ext_all {
             self.map_err(|e| span.error(format!("{e:?}")))
         }
         #[cfg(feature = "proc-macro2-diagnostics")]
-        fn map_error_dbg_with_at<FM: Display, F: Fn() -> FM>(self, f: F, span: Span) -> MacroResult<T> {
+        fn map_error_dbg_with_at<FM: Display, F: Fn() -> FM>(
+            self,
+            f: F,
+            span: Span,
+        ) -> MacroResult<T> {
             self.map_err(|e| {
                 let s = format!("{} {:?}", f(), e);
                 span.error(s)
@@ -564,28 +588,50 @@ pub mod ext_all {
         #[allow(private_interfaces)]
         fn _seal(&self, _: SealedTraitFunParam) {}
     }
+
+    #[cfg(feature = "alloc")]
+    pub trait MacroDeepResultDisplayToString<T> {
+        fn to_string_based(self) -> MacroDeepResult<T>;
+
+        #[allow(private_interfaces)]
+        fn _seal(&self, _: SealedTraitFunParam) {}
+    }
+    #[cfg(feature = "alloc")]
+    impl<T, M: Display> MacroDeepResultDisplayToString<T> for MacroDeepResult<T, M> {
+        fn to_string_based(self) -> MacroDeepResult<T> {
+            self.map_err(|e| e.to_string_based())
+        }
+
+        #[allow(private_interfaces)]
+        fn _seal(&self, _: SealedTraitFunParam) {}
+    }
 }
 
 pub mod assert {
-    #[cfg(feature = "alloc")]
     use crate::ext_all::OptionOrBoolExt;
-    #[cfg(feature = "alloc")]
+
     use crate::MacroDeepResult;
+
     #[cfg(feature = "proc-macro2-diagnostics")]
     use crate::MacroResult;
 
-    #[cfg(feature = "alloc")]
-    use alloc::string::String;
+    use core::fmt::Display;
 
     #[cfg(feature = "proc-macro2-diagnostics")]
     use proc_macro2::Span;
 
-    #[cfg(feature = "alloc")]
-    pub fn true_or_error_with<F: Fn() -> String>(b: bool, f: F) -> MacroDeepResult<()> {
+    pub fn true_or_error_with<FM: Display, F: Fn() -> FM>(
+        b: bool,
+        f: F,
+    ) -> MacroDeepResult<(), impl Display> {
         b.ok_or_error_with(f)
     }
     #[cfg(feature = "proc-macro2-diagnostics")]
-    pub fn true_or_error_with_at<F: Fn() -> String>(b: bool, f: F, span: Span) -> MacroResult<()> {
+    pub fn true_or_error_with_at<FM: Display, F: Fn() -> FM>(
+        b: bool,
+        f: F,
+        span: Span,
+    ) -> MacroResult<()> {
         b.ok_or_error_with_at(f, span)
     }
 }
