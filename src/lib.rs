@@ -46,7 +46,7 @@ pub type MacroDeepResult<T, D = String> = Result<T, MacroDeepDiagnostic<D>>;
 
 /// Like [proc_macro2_diagnostics::Diagnostic], but its [Displayish::display] is NOT converted to
 /// [String], so that we convert it only at the top function call tree level. To convert use
-/// [SpannedDiagnostic::into_diagnostic]. <--- @TODO this docs
+/// [MacroSpannedDiagnostic::into_diagnostic].
 #[cfg(feature = "proc-macro2-diagnostics")]
 pub type MacroSpannedDiagnostic<D = String> = Displayish<D, (LevelLike, Span)>;
 
@@ -132,9 +132,7 @@ impl<D: Display + 'static> Displayish<D> {
     }
 }
 impl<D: Display> From<D> for Displayish<D> {
-    //@TODO DOC old:
-    /// Move-and-construct/convert. If using `proc-macro2-diagnostics`, then [DeepDiagnostic::level]
-    /// will be set to [Level::Error].
+    /// Move-and-construct/wrap.
     fn from(display: D) -> Self {
         let extra = ();
         Self { display, extra }

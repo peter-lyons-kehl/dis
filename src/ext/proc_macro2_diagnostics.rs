@@ -115,7 +115,7 @@ impl<T, ERR: ToString> ResultErrToDisplayExt<T> for Result<T, ERR> {
 
 pub trait MacroDeepResultExt<T> {
     // @TODO if implemented in proc_macro2_diagnostics, make it accept MultiSpan.
-    /// Add the given [Span], and transform to [MacroResult].
+    /// Add the given [Span], and transform to [MacroDiagnosticResult].
     fn spanned(self, span: Span) -> MacroDiagnosticResult<T>;
 
     #[allow(private_interfaces)]
