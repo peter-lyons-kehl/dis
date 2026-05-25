@@ -57,18 +57,20 @@ pub type MacroDiagnosticResult<T> = Result<T, PmDiagnostic>;
 /*#[cfg(feature = "proc-macro2")]
 pub type MacroSpannedResult<T, D> = Result<T, SpannedDiagnostic<D>>;*/
 
+mod structures {
+    use core::fmt::Display;
+    #[derive(Clone, Debug)]
+    pub struct Displayish<D: Display, EX = ()> {
+        pub(crate) display: D,
+        pub(crate) extra: EX,
+    }
+}
+
 #[cfg(feature = "alloc")]
-#[derive(Clone, Debug)]
-pub struct Displayish<D: Display = String, EX = ()> {
-    display: D,
-    extra: EX,
-}
+pub type Displayish<D = String, EX = ()> = structures::Displayish<D, EX>;
 #[cfg(not(feature = "alloc"))]
-#[derive(Clone, Debug)]
-pub struct Displayish<D: Display, EX = ()> {
-    display: D,
-    extra: EX,
-}
+pub type Displayish<D, EX = ()> = structures::Displayish<D, EX>;
+
 impl<D: Display, EX> Displayish<D, EX> {
     pub const fn new_from_pair(display: D, extra: EX) -> Self {
         Self { display, extra }

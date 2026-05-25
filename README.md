@@ -2,22 +2,24 @@
 
 ## Goal
 
-Trait extensions and asserts to use with
-[proc-macro2-diagnostics](https://crates.io/crates/proc-macro2-diagnostics)
-([SergioBenitez/proc-macro2-diagnostics](https://github.com/SergioBenitez/proc-macro2-diagnostics/)).
+- [`Displayish`] is a flexible type that carries [`Display`] implementations and optional
+  [`Displayish::extra`] data.
+- Trait extensions and asserts to use [`Displayish`] with, or without,
+  [proc-macro2-diagnostics](https://crates.io/crates/proc-macro2-diagnostics)
+  ([SergioBenitez/proc-macro2-diagnostics](https://github.com/SergioBenitez/proc-macro2-diagnostics/)).
 
 ## Extension method naming convention
 
-- `**_with` takes a function/closure that generates `Display` content; it invokes the closure and
+- `**_with` takes a function/closure that generates [`Display`] content; it invokes the closure and
   prepends that generated content in front of the existing content already stored/coming from `self`
   (with an extra space between them).
-- `**_and` sets an `extra`.
-- `**_with_and` takes a closure, invokes it, and prepends that generated content `Display` content,
-  and sets an `extra`.
+- `**_and` sets [`Displayish::extra`].
+- `**_with_and` takes a closure, invokes it, and prepends that generated content [`Display`]
+  content, and sets [`Displayish::extra`].
 
-`bool` and `Option` are special: They don't carry any error message. So they have ONLY methods that
-have suffixes `_with` or `with_and` - but not suffixless, since we have to specify/generate the
-content.
+[`bool`] and [`Option`] are special: They don't carry any error message. So their extensions have
+ONLY methods that have suffixes `_with` or `with_and` - but not suffixless, since we have to
+specify/generate the content.
 
 ## no_std subset
 
