@@ -1,4 +1,10 @@
 #![cfg_attr(not(feature = "proc-macro2"), no_std)]
+
+// Overriding link references from README.md for locally generated docs and docs.rs. See
+// https://github.github.com/gfm/#link-reference-definitions and
+// https://github.github.com/gfm/#example-173.
+//! [`Displayish`]: type.Displayish.html
+//! [`Displayish::extra`]: type.Displayish.html#method.extra
 #![doc = include_str!("../README.md")]
 
 #[cfg(feature = "alloc")]

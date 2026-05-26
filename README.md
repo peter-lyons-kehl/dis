@@ -23,9 +23,13 @@ specify/generate the content.
 
 ## no_std subset
 
-Default featureset is `no_std`-compatible. It's limited, but it can be used even without
-`proc-macro2-diagnostics`. To use `proc-macro2-diagnostics` functionality (`Diagnostic` etc.),
-enable cargo feature `proc-macro2-diagnostics`.
+Default featureset is `no_std`-compatible and heapless (without `alloc`). It's limited, but it can
+be used even without `proc-macro2-diagnostics`. To use `proc-macro2-diagnostics` functionality
+(`Diagnostic` etc.), enable cargo feature `proc-macro2-diagnostics`.
+
+<!-- Link references used on GitHub and crates.io only. On docs.rs they are overridden in src/lib.rs -->
+[`Displayish`]: https://docs.rs/dis/latest/dis/type.Displayish.html
+[`Displayish::extra`]: https://docs.rs/dis/latest/dis/type.Displayish.html#method.extra
 
 [`Display`]: https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html
 [`bool`]: https://doc.rust-lang.org/nightly/core/primitive.bool.html
