@@ -116,13 +116,13 @@ impl<T, ERR: ToString> ResultErrToDisplayExt<T> for Result<T, ERR> {
 pub trait MacroDeepResultExt<T> {
     // @TODO if implemented in proc_macro2_diagnostics, make it accept MultiSpan.
     /// Add the given [Span], and transform to [MacroDiagnosticResult].
-    fn spanned(self, span: Span) -> MacroDiagnosticResult<T>;
+    fn span_err(self, span: Span) -> MacroDiagnosticResult<T>;
 
     #[allow(private_interfaces)]
     fn _seal(&self, _: Seal);
 }
 impl<T, D: Display> MacroDeepResultExt<T> for MacroDeepResult<T, D> {
-    fn spanned(self, span: Span) -> MacroDiagnosticResult<T> {
+    fn span_err(self, span: Span) -> MacroDiagnosticResult<T> {
         self.map_err(|deep_err| deep_err.spanned(span).into_diagnostic())
     }
     #[allow(private_interfaces)]

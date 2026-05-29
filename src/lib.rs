@@ -1,5 +1,4 @@
 #![cfg_attr(not(feature = "proc-macro2"), no_std)]
-
 // Overriding link references from README.md for locally generated docs and docs.rs. See
 // https://github.github.com/gfm/#link-reference-definitions and
 // https://github.github.com/gfm/#example-173.
