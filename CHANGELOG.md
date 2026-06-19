@@ -1,5 +1,11 @@
 # Changelog
 
+## June 20, 2026
+
+### Version 0.0.3
+
+- Added `MacroStreamResult`.
+
 ## May 28, 2026
 
 ### Version 0.0.2

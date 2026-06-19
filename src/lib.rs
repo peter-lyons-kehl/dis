@@ -16,7 +16,7 @@ use alloc::string::{String, ToString as _};
 use core::any::Any;
 
 #[cfg(feature = "proc-macro2-diagnostics")]
-use proc_macro2::Span;
+use proc_macro2::{Span, TokenStream};
 
 use core::fmt::{self, Display, Formatter};
 
@@ -57,9 +57,13 @@ pub type MacroSpannedDiagnostic<D = String> = Displayish<D, (LevelLike, Span)>;
 
 #[cfg(feature = "proc-macro2-diagnostics")]
 pub type MacroDiagnosticResult<T> = Result<T, PmDiagnostic>;
+
+#[cfg(feature = "proc-macro2-diagnostics")]
+pub type MacroStreamResult = MacroDiagnosticResult<TokenStream>;
 //-----
 
 /// Don't use directly. Not a part of the public API.
+#[doc(hidden)]
 pub mod structures {
     use core::fmt::Display;
     #[derive(Clone, Debug)]
