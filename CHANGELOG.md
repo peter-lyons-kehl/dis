@@ -1,6 +1,6 @@
 # Changelog
 
-## June 20, 2026
+## June 19, 2026
 
 ### Version 0.0.3
 
