@@ -24,6 +24,7 @@ use core::fmt::{self, Display, Formatter};
 use proc_macro2_diagnostics::{Diagnostic as PmDiagnostic, Level};
 
 #[cfg(not(feature = "alloc"))]
+
 pub type DisplayishResult<T, D, EX = ()> = Result<T, Displayish<D, EX>>;
 
 #[cfg(feature = "alloc")]
@@ -181,13 +182,13 @@ pub mod assert {
         b: bool,
         f: F,
     ) -> DisplayishResult<(), FD> {
-        b.ok_or_error_with(f)
+        b.dis_ok_or_error_with(f)
     }
     pub fn true_or_error_with_at<FD: Display, F: Fn() -> FD, EX>(
         b: bool,
         f: F,
         extra: EX,
     ) -> DisplayishResult<(), FD, EX> {
-        b.ok_or_error_with_and(f, extra)
+        b.dis_ok_or_error_with_and(f, extra)
     }
 }

@@ -70,15 +70,15 @@ impl<D: Display, T: Into<D>> ContentIntoDisplayExt<D> for T {
 }
 
 pub trait ResultErrIntoDisplayExt<D: Display, T> {
-    fn map_err_into(self) -> DisplayishResult<T, D>;
-    fn map_err_into_with<FD: Display, F: Fn() -> FD>(
+    fn dis_map_err_into(self) -> DisplayishResult<T, D>;
+    fn dis_map_err_into_with<FD: Display, F: Fn() -> FD>(
         self,
         f: F,
     ) -> DisplayishResult<T, impl Display>;
 
-    fn map_err_into_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX>;
+    fn dis_map_err_into_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX>;
 
-    fn map_err_into_with_and<FD: Display, F: Fn() -> FD, EX>(
+    fn dis_map_err_into_with_and<FD: Display, F: Fn() -> FD, EX>(
         self,
         f: F,
         extra: EX,
@@ -88,10 +88,10 @@ pub trait ResultErrIntoDisplayExt<D: Display, T> {
     fn _seal(&self, _: Seal);
 }
 impl<D: Display, T, ERR: Into<D>> ResultErrIntoDisplayExt<D, T> for Result<T, ERR> {
-    fn map_err_into(self) -> DisplayishResult<T, D> {
+    fn dis_map_err_into(self) -> DisplayishResult<T, D> {
         self.map_err(|err| Displayish::new_from_display(err))
     }
-    fn map_err_into_with<FD: Display, F: Fn() -> FD>(
+    fn dis_map_err_into_with<FD: Display, F: Fn() -> FD>(
         self,
         f: F,
     ) -> DisplayishResult<T, impl Display> {
@@ -106,10 +106,10 @@ impl<D: Display, T, ERR: Into<D>> ResultErrIntoDisplayExt<D, T> for Result<T, ER
         })
     }
 
-    fn map_err_into_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX> {
+    fn dis_map_err_into_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX> {
         self.map_err(|err| Displayish::new_from_into_pair(err, extra))
     }
-    fn map_err_into_with_and<FD: Display, F: Fn() -> FD, EX>(
+    fn dis_map_err_into_with_and<FD: Display, F: Fn() -> FD, EX>(
         self,
         f: F,
         extra: EX,
@@ -129,9 +129,9 @@ impl<D: Display, T, ERR: Into<D>> ResultErrIntoDisplayExt<D, T> for Result<T, ER
 }
 
 pub trait OptionOrBoolExt<T> {
-    fn ok_or_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> DisplayishResult<T, FD>;
+    fn dis_ok_or_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> DisplayishResult<T, FD>;
 
-    fn ok_or_error_with_and<FD: Display, F: Fn() -> FD, EX>(
+    fn dis_ok_or_error_with_and<FD: Display, F: Fn() -> FD, EX>(
         self,
         f: F,
         extra: EX,
@@ -141,11 +141,11 @@ pub trait OptionOrBoolExt<T> {
     fn _seal(&self, _: Seal);
 }
 impl<T> OptionOrBoolExt<T> for Option<T> {
-    fn ok_or_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> DisplayishResult<T, FD> {
+    fn dis_ok_or_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> DisplayishResult<T, FD> {
         self.ok_or_else(|| Displayish::new_from_display(f()))
     }
 
-    fn ok_or_error_with_and<FD: Display, F: Fn() -> FD, EX>(
+    fn dis_ok_or_error_with_and<FD: Display, F: Fn() -> FD, EX>(
         self,
         f: F,
         extra: EX,
@@ -157,7 +157,7 @@ impl<T> OptionOrBoolExt<T> for Option<T> {
     fn _seal(&self, _: Seal) {}
 }
 impl OptionOrBoolExt<()> for bool {
-    fn ok_or_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> DisplayishResult<(), FD> {
+    fn dis_ok_or_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> DisplayishResult<(), FD> {
         // bool::ok_or_else is unstable: https://github.com/rust-lang/rust/issues/142748
         if self {
             Ok(())
@@ -166,7 +166,7 @@ impl OptionOrBoolExt<()> for bool {
         }
     }
 
-    fn ok_or_error_with_and<FD: Display, F: Fn() -> FD, EX>(
+    fn dis_ok_or_error_with_and<FD: Display, F: Fn() -> FD, EX>(
         self,
         f: F,
         extra: EX,
@@ -183,20 +183,20 @@ impl OptionOrBoolExt<()> for bool {
 }
 
 pub trait DebugExt: Debug {
-    fn dbg_error(&self) -> Displayish<impl Display>;
+    fn dis_dbg_error(&self) -> Displayish<impl Display>;
 
-    fn dbg_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> Displayish<impl Display>;
+    fn dis_dbg_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> Displayish<impl Display>;
 
     #[allow(private_interfaces)]
     fn _seal(&self, _: Seal);
 }
 
 impl<T: Debug> DebugExt for T {
-    fn dbg_error(&self) -> Displayish<impl Display> {
+    fn dis_dbg_error(&self) -> Displayish<impl Display> {
         let display = DisplayFromFn(move |fmt| fmt.write_fmt(format_args!("{self:?}")));
         Displayish::<DisplayFromFn<_>>::new_from_display(display)
     }
-    fn dbg_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> Displayish<impl Display> {
+    fn dis_dbg_error_with<FD: Display, F: Fn() -> FD>(self, f: F) -> Displayish<impl Display> {
         let display = DisplayFromFn(move |fmt| {
             f().fmt(fmt)?;
             Display::fmt(&' ', fmt)?; // ' '.fmt(fmt) is ambiguous
@@ -210,14 +210,14 @@ impl<T: Debug> DebugExt for T {
 }
 
 pub trait ResultErrDebugExt<T> {
-    fn map_err_dbg(self) -> DisplayishResult<T, impl Display>;
-    fn map_err_dbg_with<FD: Display, F: Fn() -> FD>(
+    fn dis_map_err_dbg(self) -> DisplayishResult<T, impl Display>;
+    fn dis_map_err_dbg_with<FD: Display, F: Fn() -> FD>(
         self,
         f: F,
     ) -> DisplayishResult<T, impl Display>;
 
-    fn map_err_dbg_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX>;
-    fn map_err_dbg_with_and<FD: Display, F: Fn() -> FD, EX>(
+    fn dis_map_err_dbg_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX>;
+    fn dis_map_err_dbg_with_and<FD: Display, F: Fn() -> FD, EX>(
         self,
         f: F,
         extra: EX,
@@ -227,13 +227,13 @@ pub trait ResultErrDebugExt<T> {
     fn _seal(&self, _: Seal);
 }
 impl<T, ERR: Debug> ResultErrDebugExt<T> for Result<T, ERR> {
-    fn map_err_dbg(self) -> DisplayishResult<T, impl Display> {
+    fn dis_map_err_dbg(self) -> DisplayishResult<T, impl Display> {
         self.map_err(|e| {
             let display = DisplayFromFn(move |fmt| fmt.write_fmt(format_args!("{e:?}")));
             Displayish::<DisplayFromFn<_>>::new_from_display(display)
         })
     }
-    fn map_err_dbg_with<FD: Display, F: Fn() -> FD>(
+    fn dis_map_err_dbg_with<FD: Display, F: Fn() -> FD>(
         self,
         f: F,
     ) -> DisplayishResult<T, impl Display> {
@@ -247,13 +247,13 @@ impl<T, ERR: Debug> ResultErrDebugExt<T> for Result<T, ERR> {
         })
     }
 
-    fn map_err_dbg_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX> {
+    fn dis_map_err_dbg_and<EX>(self, extra: EX) -> DisplayishResult<T, impl Display, EX> {
         self.map_err(|e| {
             let display = DisplayFromFn(move |fmt| fmt.write_fmt(format_args!("{e:?}")));
             Displayish::<DisplayFromFn<_>, _>::new_from_pair(display, extra)
         })
     }
-    fn map_err_dbg_with_and<FD: Display, F: Fn() -> FD, EX>(
+    fn dis_map_err_dbg_with_and<FD: Display, F: Fn() -> FD, EX>(
         self,
         f: F,
         extra: EX,

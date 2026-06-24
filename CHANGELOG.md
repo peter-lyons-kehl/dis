@@ -1,24 +1,30 @@
 # Changelog
 
-## June 19, 2026
+## 2026-June-24
+
+### Version 0.0.4
+
+- prefixed extension methods with `dis_`.
+
+## 2026-June-19
 
 ### Version 0.0.3
 
 - Added `MacroStreamResult`.
 
-## May 28, 2026
+## 2026-May-28
 
 ### Version 0.0.2
 
 - Renamed `.spanned(...)` --> `.span_err(...)`.
 
-## May 26, 2026
+## 2026-May-26
 
 ### Version 0.0.1
 
 ## Not published on crates.io yet
 
-### May 16, 2026
+### 2026-May-16
 
 - `DeepDiagnostic::msg`, `DeepDiagnostic::level`
 - `no_std` and allocation-free subset
